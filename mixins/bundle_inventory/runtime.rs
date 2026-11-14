@@ -33,7 +33,7 @@ use std::cell::{Cell, RefCell};
 /// The mod's registry id: the settings folder and the Options > Mods row.
 pub const ID: &str = "bundle_inventory";
 /// The version the row shows.
-pub const VERSION: &str = "0.1.0";
+pub const VERSION: &str = "0.1.1";
 /// The mod's description for its row.
 pub const DESCRIPTION: &str = "Shift + right-click a bundle in your inventory to open an \
 interactive panel of its contents beside the inventory: click an entry to take it, \

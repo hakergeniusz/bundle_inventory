@@ -1,6 +1,6 @@
 [mod]
 id = "bundle_inventory"
-version = "0.1.0"
+version = "0.1.1"
 priority = 100
 
 # The commit it was tested on: it draws into the survival inventory, routes
@@ -28,6 +28,19 @@ id = "hooks"
 file = "crates/horizon-client/src/game.rs"
 name = "bundle_inventory_hooks"
 source = "hooks.rs"
+
+# A right-click over the world, before the game uses it: shift +
+# right-click on the held bundle opens the plain inventory with the panel
+# already on it, and the use is skipped.
+[[injection]]
+id = "use"
+kind = "HEAD"
+cancellable = true
+target = "horizon_client::game::Game<'_>::use_item"
+helper = "use.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
 
 # A press on any open screen, before the screen acts on it: the panel's whole
 # routing — shift + right-click on a bundle opens it, an entry click takes it
