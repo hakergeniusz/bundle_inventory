@@ -4,13 +4,12 @@
 // tints all come free — the hover highlight and the hovered entry's name,
 // and the weight bar under the grid, blue the way the bundle's own bar is
 // until the bundle is full, then red. Read-only: the clicks answer in
-// their own helper.
+// their own helper. The hook is the screen draw's own frame post, which
+// fires while any screen but Playing is up, so the screen here is read off
+// the game — the panel draws where the click routing answers, and a
+// server-opened menu stays the game's own.
 // Copyright (c) 2026 hakergeniusz. MIT.
-fn bundle_inventory_draw(
-    game: &crate::game::Game<'_>,
-    batch: &mut HudBatch,
-    screen: &ScreenView<'_>,
-) {
+fn bundle_inventory_draw(game: &crate::game::Game<'_>, batch: &mut HudBatch) {
     // Whether the mod's panel may act here: on, on the window's game, and
     // the plain survival inventory (no container, no workstation, the 2x2
     // grid, no mount screen, no creative tabs).
@@ -41,7 +40,10 @@ fn bundle_inventory_draw(
     }
 
     use horizon_client::bundle::Contents;
-    if screen.id != "inventory" || screen.menu.is_some() || !gates(game) {
+    if game.screen != crate::game::Screen::Inventory
+        || game.remote_menu_type().is_some_and(|menu| !menu.is_empty())
+        || !gates(game)
+    {
         return;
     }
     if game.book_covers_menu(batch.width) {

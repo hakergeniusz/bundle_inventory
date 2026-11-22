@@ -1,6 +1,6 @@
 id = "bundle_inventory"
 name = "Bundle Inventory"
-version = "0.2.0"
+version = "0.2.1"
 description = "Shift + right-click a bundle in your inventory to open an interactive panel of its contents beside the inventory: click an entry to take it, shift-click to move it into your inventory, click any item with the panel open to put it in, and Q over an entry to drop it. Works in single player, on LAN and on servers, because every move is an ordinary inventory click."
 authors = ["hakergeniusz"]
 license = "MIT"
@@ -48,16 +48,16 @@ bindings = [
 # The panel drawn whole once a frame, after the screen and its tooltips:
 # the box, one real slot per entry with the game's own item rendering, the
 # hover highlight and name, and the weight bar in the bundle's own colors.
-# Read-only.
+# Read-only. The hook is the screen draw's own frame post, which fires while
+# any screen but Playing is up, so the screen here is read off the game.
 [[native.mixin]]
 id = "draw"
-target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_render_post"
+target = "horizon_client::game::screen_backgrounds::Game<'_>::draw_screen_with_post_hook"
 kind = "HEAD"
 helper = "src/mixins/draw.rs"
 bindings = [
   { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
-  { name = "batch", ty = "&mut HudBatch", value = "draw" },
-  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "batch", ty = "&mut HudBatch", value = "batch" },
 ]
 
 # A key went down or up, after rebinding: while the panel is open over the

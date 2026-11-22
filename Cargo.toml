@@ -1,6 +1,6 @@
 [package]
 name = "bundle_inventory"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT"
 description = "Bundle Inventory: shift + right-click a bundle in your inventory for an interactive panel of its contents — click to take, shift-click to move, click items to put them in, Q to drop. A Horizon native mod."
