@@ -1,7 +1,7 @@
 // Bundle Inventory's brain: pure standard library, no game types, so it
-// compiles and tests wherever — as this crate's library and, injected, as a
-// module of the game. Every decision the helpers act on lives here, and every
-// one of those decisions is tested below.
+// compiles and tests wherever — as this crate's library, which every
+// helper reaches as `bundle_inventory::`. Every decision the helpers act
+// on lives here, and every one of those decisions is tested below.
 //
 // The model: a bundle keeps its contents in the item stack's own data
 // (`minecraft:bundle_contents`, a list of item stacks), and the engine's
@@ -33,7 +33,7 @@ use std::cell::{Cell, RefCell};
 /// The mod's registry id: the settings folder and the Options > Mods row.
 pub const ID: &str = "bundle_inventory";
 /// The version the row shows.
-pub const VERSION: &str = "0.1.1";
+pub const VERSION: &str = "0.2.0";
 /// The mod's description for its row.
 pub const DESCRIPTION: &str = "Shift + right-click a bundle in your inventory to open an \
 interactive panel of its contents beside the inventory: click an entry to take it, \
@@ -805,5 +805,29 @@ mod tests {
             })
         );
         assert_eq!(view.slot_item(9), None);
+    }
+}
+
+/// The mod's registration handle: the game instantiates it for the settings
+/// page and the dispatch registration.
+#[derive(Default)]
+pub struct Mod;
+
+/// The page's one toggle (the mod's own `enabled` key, as the gates always
+/// read it). The `client_tick_pre` impl is a no-op so the game always calls
+/// the `native_client_tick_pre` dispatch the tick mixin lives in: the game
+/// skips dispatches no mod listens to, and the mixin must run.
+#[mod_api::horizon_mod]
+impl mod_api::Hooks for Mod {
+    fn register(&self, registrar: &mut dyn mod_api::Registrar, _: &mod_api::RegistrationContext) {
+        use mod_api::SettingSpec;
+        let _ = registrar.register_setting(SettingSpec::toggle(
+            SETTING_ENABLED,
+            "bundle_inventory.setting.enabled",
+            true,
+        ));
+    }
+
+    fn client_tick_pre(&self, _: &mut dyn mod_api::ClientHost, _: &mut mod_api::ClientTickPreEvent) {
     }
 }

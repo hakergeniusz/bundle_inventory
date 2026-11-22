@@ -1,0 +1,92 @@
+id = "bundle_inventory"
+name = "Bundle Inventory"
+version = "0.2.0"
+description = "Shift + right-click a bundle in your inventory to open an interactive panel of its contents beside the inventory: click an entry to take it, shift-click to move it into your inventory, click any item with the panel open to put it in, and Q over an entry to drop it. Works in single player, on LAN and on servers, because every move is an ordinary inventory click."
+authors = ["hakergeniusz"]
+license = "MIT"
+api = "0.2"
+side = "client"
+capabilities = ["registries"]
+
+[native]
+game = "26.3"
+horizon = "f037744a79f9982c47876f49c5a3067279f88706"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# A right-click over the world, before the game uses it: shift +
+# right-click on the held bundle opens the plain inventory with the panel
+# already on it, and the use is skipped.
+[[native.mixin]]
+id = "use"
+target = "horizon_client::game::item_actions::Game<'_>::use_item"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/use.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+# A press on any open screen, before the screen acts on it: the panel's
+# whole routing — shift + right-click on a bundle opens it, an entry click
+# takes it or (shift) moves it into the inventory, a click on another
+# player slot puts that stack in, a click anywhere else closes the panel
+# and keeps the vanilla click-outside from dropping what the cursor
+# carries.
+[[native.mixin]]
+id = "click"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_mouse_button_pressed_pre"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/click.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+  { name = "button", ty = "i32", value = "button" },
+  { name = "modifiers", ty = "u32", value = "modifiers" },
+]
+
+# The panel drawn whole once a frame, after the screen and its tooltips:
+# the box, one real slot per entry with the game's own item rendering, the
+# hover highlight and name, and the weight bar in the bundle's own colors.
+# Read-only.
+[[native.mixin]]
+id = "draw"
+target = "horizon_client::game::native_hooks::base::Game<'_>::native_screen_render_post"
+kind = "HEAD"
+helper = "src/mixins/draw.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "batch", ty = "&mut HudBatch", value = "draw" },
+  { name = "screen", ty = "&ScreenView<'_>", value = "screen" },
+]
+
+# A key went down or up, after rebinding: while the panel is open over the
+# plain survival inventory, Escape closes the panel instead of the
+# inventory, and Q over an entry drops that entry into the world — presses
+# only, and the drop defers to the tick.
+[[native.mixin]]
+id = "key"
+target = "horizon_client::game::play_input::Game<'_>::mapped_key"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/key.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "&*self" },
+  { name = "key", ty = "winit::keyboard::KeyCode", value = "key" },
+  { name = "pressed", ty = "bool", value = "pressed" },
+  { name = "repeat", ty = "bool", value = "repeat" },
+]
+
+# Every tick, on the window's Game: keep the panel honest (it closes the
+# moment the world disagrees), and run the deferred plan step by step as
+# ordinary menu clicks, each step's cursor expectation checked first. The
+# tick_pre hook itself is implemented in src/lib.rs so this dispatch always
+# runs.
+[[native.mixin]]
+id = "tick"
+target = "horizon_client::game::native_hooks::client_tick_pre::Game<'_>::native_client_tick_pre"
+kind = "HEAD"
+helper = "src/mixins/tick.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
